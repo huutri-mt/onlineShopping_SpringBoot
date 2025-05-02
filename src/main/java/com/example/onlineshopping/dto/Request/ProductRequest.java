@@ -1,6 +1,6 @@
 package com.example.onlineshopping.dto.Request;
 
-import jakarta.validation.constraints.Size;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,9 +11,11 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest {
-    String email;
-    String fullname;
-    String status;
-
+public class ProductRequest {
+    String name;
+    String description;
+    int price;
+    int stock;
+    int originalPrice;
+    String category;
 }

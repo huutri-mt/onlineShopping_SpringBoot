@@ -1,4 +1,4 @@
-package com.example.onlineshopping.Config;
+package com.example.onlineshopping.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,16 +10,15 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
     @Bean
-
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable() // Tắt CSRF nếu bạn dùng API thuần
+        return http
+                .csrf(csrf -> csrf.disable())  // <--- đúng chuẩn mới
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()  // Cho phép truy cập tất cả các endpoint
-                );
-
-        return http.build();
+                        .anyRequest().permitAll()
+                )
+                .build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

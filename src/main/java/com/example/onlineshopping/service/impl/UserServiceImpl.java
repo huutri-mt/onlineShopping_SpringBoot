@@ -3,10 +3,12 @@ import com.example.onlineshopping.dto.Request.UserChangePassword;
 import com.example.onlineshopping.dto.Request.UserCreationRequest;
 import com.example.onlineshopping.dto.Request.UserUpdateRequest;
 import com.example.onlineshopping.entity.User;
+import com.example.onlineshopping.mapper.UserMapper;
 import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -16,7 +18,8 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
-
+    @Autowired
+    private UserMapper userMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -25,11 +28,10 @@ public class UserServiceImpl implements UserService {
         if(userRepository.existsUserByEmail(request.getEmail())){
             throw new RuntimeException("Email da ton tai");
         }
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-        user.setFullname(request.getFullname());
-        user.setStatus(request.getStatus());
-        user.setRole(request.getRole());
+
+        user = userMapper.toUser(request);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userRepository.save(user);
     }
 
@@ -44,15 +46,11 @@ public class UserServiceImpl implements UserService {
 
     public User updateUser(UserUpdateRequest request, int id) {
         User user = getUserById(id);
-
         if(userRepository.existsUserByEmail(request.getEmail())){
             throw new RuntimeException("Email da ton tai");
         }
-        else {
-            user.setEmail(request.getEmail());
-        }
-        user.setFullname(request.getFullname());
-        user.setStatus(request.getStatus());
+        user = userMapper.toUser(user, request);
+
         return userRepository.save(user);
     }
     public void deleteUser(int id) {
