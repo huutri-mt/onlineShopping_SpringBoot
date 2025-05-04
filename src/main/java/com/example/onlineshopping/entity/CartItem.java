@@ -16,9 +16,9 @@ public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    @Column( name = "cart_id")
+    @JsonProperty("cart_id")
     int cartId;
-    @Column( name = "product_id")
+    @JsonProperty("product_id")
     int productId;
     int quantity;
 }

@@ -16,6 +16,6 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    @Column(name = "user_id")
+    @JsonProperty("user_id")
     int userId;
 }
