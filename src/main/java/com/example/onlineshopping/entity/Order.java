@@ -10,12 +10,16 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "carts")
+@Table(name = "orders")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Cart {
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    @Column(name = "user_id")
-    int userId;
+    String description;
+    String status;
+    @JsonProperty("total_amount")
+    int totalAmount;
+    @JsonProperty("user_id")
+    int userID;
 }

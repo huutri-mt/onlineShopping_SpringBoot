@@ -10,12 +10,15 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "carts")
+@Table(name = "cart_items")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Cart {
+public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    @Column(name = "user_id")
-    int userId;
+    @Column( name = "cart_id")
+    int cartId;
+    @Column( name = "product_id")
+    int productId;
+    int quantity;
 }
