@@ -12,17 +12,24 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Table(name = "order_items")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-
-public class orderItem {
+public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
+
+    @Column(name = "order_id", nullable = false)
     @JsonProperty("order_id")
-    int orderID;
+    int orderId;
+
+    @Column(name = "product_id", nullable = false)
     @JsonProperty("product_id")
-    int productID;
+    int productId;
+
+    @Column(name = "original_price", nullable = false)
     @JsonProperty("original_price")
-    int originalPrice;
+    long originalPrice;
+
+    @Column(name = "price", nullable = false)
     @JsonProperty("price")
-    int price;
+    long price;
 }

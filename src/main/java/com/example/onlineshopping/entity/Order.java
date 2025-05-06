@@ -16,10 +16,17 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
+
     String description;
+
+    @Column(nullable = false)
     String status;
+
+    @Column(name = "total_amount")
     @JsonProperty("total_amount")
-    int totalAmount;
+    long totalAmount;
+
+    @Column(name = "user_id")
     @JsonProperty("user_id")
-    int userID;
+    int userId;
 }

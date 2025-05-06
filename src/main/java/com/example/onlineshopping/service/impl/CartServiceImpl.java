@@ -2,6 +2,7 @@ package com.example.onlineshopping.service.impl;
 
 import com.example.onlineshopping.dto.Request.AddCartItemRequest;
 import com.example.onlineshopping.dto.Request.RemoveCartItemRequest;
+import com.example.onlineshopping.dto.Response.CartResponse;
 import com.example.onlineshopping.entity.Cart;
 import com.example.onlineshopping.entity.CartItem;
 import com.example.onlineshopping.entity.Product;
@@ -11,6 +12,9 @@ import com.example.onlineshopping.repository.ProductRepository;
 import com.example.onlineshopping.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -71,6 +75,23 @@ public class CartServiceImpl implements CartService {
     }
 
 
+    public List<CartResponse> getCart(int cartId) {
+        List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new RuntimeException("Giỏ hàng không tồn tại");
+        }
+
+        List<CartResponse> cartResponses = new ArrayList<>();
+        for (CartItem item : cartItems) {
+            CartResponse cartResponse = new CartResponse();
+            cartResponse.setProductName(cartItemRepository.getProductNameById(item.getProductId()));
+            cartResponse.setProductPrice(cartItemRepository.getProductPriceById(item.getProductId()));
+            cartResponse.setQuantity(item.getQuantity());
+            cartResponse.setTotalPrice(cartItemRepository.getTotalPriceForProduct(cartId, item.getProductId()));
+            cartResponses.add(cartResponse);
+        }
+        return cartResponses;
+    }
 
 }
 
