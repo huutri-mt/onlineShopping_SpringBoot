@@ -6,9 +6,11 @@ import com.example.onlineshopping.dto.Response.CartResponse;
 import com.example.onlineshopping.entity.Cart;
 import com.example.onlineshopping.entity.CartItem;
 import com.example.onlineshopping.entity.Product;
+import com.example.onlineshopping.entity.User;
 import com.example.onlineshopping.repository.CartItemRepository;
 import com.example.onlineshopping.repository.CartRepository;
 import com.example.onlineshopping.repository.ProductRepository;
+import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,12 +30,18 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private CartRepository cartRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public CartItem addToCart(AddCartItemRequest request) {
         Cart cart = cartRepository.findByUserId(request.getUserId());
 
         if (cart == null) {
             cart = new Cart();
-            cart.setUserId(request.getUserId());
+            User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+            cart.setUser(user);
             cart = cartRepository.save(cart);
         }
 
@@ -45,7 +53,7 @@ public class CartServiceImpl implements CartService {
         if (cartItem == null) {
             cartItem = new CartItem();
             cartItem.setCartId(cart.getId());
-            cartItem.setProductId(product.getId());
+            cartItem.setProduct(product);
             cartItem.setQuantity(request.getQuantity());
         } else {
             cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
@@ -84,14 +92,16 @@ public class CartServiceImpl implements CartService {
         List<CartResponse> cartResponses = new ArrayList<>();
         for (CartItem item : cartItems) {
             CartResponse cartResponse = new CartResponse();
-            cartResponse.setProductName(cartItemRepository.getProductNameById(item.getProductId()));
-            cartResponse.setProductPrice(cartItemRepository.getProductPriceById(item.getProductId()));
+            cartResponse.setProductName(item.getProduct().getName());
+            cartResponse.setProductPrice(item.getProduct().getPrice());
             cartResponse.setQuantity(item.getQuantity());
-            cartResponse.setTotalPrice(cartItemRepository.getTotalPriceForProduct(cartId, item.getProductId()));
+            cartResponse.setTotalPrice(item.getProduct().getPrice() * item.getQuantity());
             cartResponses.add(cartResponse);
         }
         return cartResponses;
     }
+
+
 
 }
 

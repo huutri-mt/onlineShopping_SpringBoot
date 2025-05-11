@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,4 +25,9 @@ public class Product {
     @JsonProperty("original_price")
     int originalPrice;
     String category;
+
+    @OneToMany (mappedBy = "product" , cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItem;
+    @OneToMany (mappedBy = "product" , cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CartItem> cartItem;
 }

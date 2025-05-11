@@ -6,8 +6,11 @@ import com.example.onlineshopping.entity.User;
 import com.example.onlineshopping.mapper.UserMapper;
 import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import java.util.List;
 
 @Service
 @Primary
+@Slf4j
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
@@ -34,15 +38,24 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userRepository.save(user);
     }
-
+    @PreAuthorize("hasRole('admin')")
     public List<User> getUsers() {
+        log.info("Getting all users");
         return userRepository.findAll();
     }
 
-    public User getUserById (int id){
+    @PostAuthorize("hasRole('admin')")
+    public User getUserById(int id) {
         return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Khong tim thay User"));
     }
 
+    public User getByEmail (String email){
+        User user = userRepository.findByEmail(email);
+        if(user == null){
+            throw new RuntimeException("Khong tim thay User");
+        }
+        return user;
+    }
 
     public User updateUser(UserUpdateRequest request, int id) {
         User user = getUserById(id);
@@ -58,7 +71,8 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
     public Boolean changePassword(int id, UserChangePassword userChangePassword) {
-        User user = getUserById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
         if(!passwordEncoder.matches(userChangePassword.getOldPassword(), user.getPassword())){
             throw new RuntimeException("Mật khẩu cũ không đúng");
@@ -68,4 +82,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return true;
     }
+    public void blockUser(int userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        user.setStatus("block");
+        userRepository.save(user);
+    }
+
 }

@@ -16,6 +16,8 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    @JsonProperty("user_id")
-    int userId;
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

@@ -6,7 +6,7 @@ import com.example.onlineshopping.dto.Response.ApiResponse;
 import com.example.onlineshopping.dto.Response.ProductResponse;
 import com.example.onlineshopping.entity.Product;
 import com.example.onlineshopping.mapper.ProductMapper;
-import com.example.onlineshopping.service.impl.ProductServiceImpl;
+import com.example.onlineshopping.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +18,11 @@ public class ProductController {
     @Autowired
     private ProductMapper productMapper;
     @Autowired
-    private ProductServiceImpl productServiceImpl;
+    private ProductService productService;
     @PostMapping("/create")
     public ApiResponse<String> createProduct(@RequestBody ProductRequest request) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        productServiceImpl.createProduct(request);
+        productService.createProduct(request);
         apiResponse.setMessage("Them san pham thanh cong");
         return apiResponse;
     }
@@ -30,7 +30,7 @@ public class ProductController {
     @PutMapping("/update/{id}")
     public ApiResponse<String> updateProduct(@PathVariable("id") int id, @RequestBody ProductRequest request) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        productServiceImpl.updateProduct(id, request);
+        productService.updateProduct(id, request);
         apiResponse.setMessage("Update san pham thanh cong");
         return apiResponse;
     }
@@ -38,7 +38,7 @@ public class ProductController {
     @GetMapping()
     public ApiResponse<List<ProductResponse>> getProducts() {
         ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
-        List<Product> products = productServiceImpl.getAllProducts();
+        List<Product> products = productService.getAllProducts();
         List<ProductResponse> productResponses = products.stream()
                 .map(product -> productMapper.toProductResponse(product))
                 .toList();
@@ -49,7 +49,7 @@ public class ProductController {
     @GetMapping("/id/{id}")
     public ApiResponse<ProductResponse> getProductById(@PathVariable("id") int id) {
         ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
-        Product product = productServiceImpl.getProductById(id);
+        Product product = productService.getProductById(id);
         ProductResponse productResponse = productMapper.toProductResponse(product);
         apiResponse.setData(productResponse);
         return apiResponse;
@@ -58,7 +58,7 @@ public class ProductController {
     @GetMapping("name/{name}")
     public ApiResponse<List<ProductResponse>> getProductsByName(@PathVariable("name") String name) {
         ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
-        List<Product> products = productServiceImpl.getProductsByName(name);
+        List<Product> products = productService.getProductsByName(name);
         List<ProductResponse> productResponses = products.stream()
                 .map(product -> productMapper.toProductResponse(product))
                 .toList();
@@ -69,7 +69,7 @@ public class ProductController {
     @GetMapping("category/{category}")
     public ApiResponse<List<ProductResponse>> getProductsByCategory(@PathVariable("category") String category) {
         ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
-        List<Product> products = productServiceImpl.getProductsByCategory(category);
+        List<Product> products = productService.getProductsByCategory(category);
         List<ProductResponse> productResponses = products.stream()
                 .map(product -> productMapper.toProductResponse(product))
                 .toList();
@@ -80,7 +80,7 @@ public class ProductController {
     @GetMapping("/price-range/{minPrice}/{maxPrice}")
     public ApiResponse<List<ProductResponse>> getProductsByPriceRange(@PathVariable("minPrice") Double minPrice, @PathVariable("maxPrice") Double maxPrice) {
         ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
-        List<Product> products = productServiceImpl.getProductsByPriceRange(minPrice, maxPrice);
+        List<Product> products = productService.getProductsByPriceRange(minPrice, maxPrice);
         List<ProductResponse> productResponses = products.stream()
                 .map(product -> productMapper.toProductResponse(product))
                 .toList();
@@ -89,10 +89,11 @@ public class ProductController {
     }
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Product> deleteProduct (@PathVariable("id") int id){
-        productServiceImpl.deleteProduct(id);
+        productService.deleteProduct(id);
         ApiResponse<Product> apiResponse = new ApiResponse<>();
         apiResponse.setMessage("Xóa sản phẩm thành công");
         return apiResponse;
     }
+
 
 }

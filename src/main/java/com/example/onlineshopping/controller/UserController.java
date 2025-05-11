@@ -7,7 +7,7 @@ import com.example.onlineshopping.dto.Request.UserUpdateRequest;
 import com.example.onlineshopping.dto.Response.UserResponse;
 import com.example.onlineshopping.entity.User;
 import com.example.onlineshopping.mapper.UserMapper;
-import com.example.onlineshopping.service.impl.UserServiceImpl;
+import com.example.onlineshopping.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +17,13 @@ import java.util.List;
 @RequestMapping(UrlConstant.API_V1_User)
 public class UserController {
     @Autowired
-    private UserServiceImpl userServiceImpl;
+    private UserService userService;
     @Autowired
     private UserMapper userMapper;
     @GetMapping()
     public ApiResponse<List<UserResponse>> getUsers(){
        ApiResponse<List<UserResponse>> apiResponse = new ApiResponse<>();
-        List<User> users = userServiceImpl.getUsers();
+        List<User> users = userService.getUsers();
         List<UserResponse> userResponses = users.stream()
                 .map(user -> userMapper.toUserResponse(user))
                 .toList();
@@ -31,24 +31,35 @@ public class UserController {
         return apiResponse;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<UserResponse> getUserById(@PathVariable("id") int id){
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        User user = userServiceImpl.getUserById(id);
+        User user = userService.getUserById(id);
         UserResponse userResponse = userMapper.toUserResponse(user);
         apiResponse.setData(userResponse);
         return apiResponse;
     }
+
+    @GetMapping("/email/{email}")
+    public ApiResponse<UserResponse> getUserByEmail(@PathVariable("email") String email){
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        User user = userService.getByEmail(email);
+        UserResponse userResponse = userMapper.toUserResponse(user);
+        apiResponse.setData(userResponse);
+        return apiResponse;
+    }
+
+
     @PutMapping("/{id}")
     public ApiResponse <String> updateUser(@RequestBody @Valid UserUpdateRequest request, @PathVariable("id") int id){
         ApiResponse <String> apiResponse = new ApiResponse<>();
-        userServiceImpl.updateUser(request,id);
+        userService.updateUser(request,id);
         apiResponse.setMessage("Update user thanh cong");
         return apiResponse;
     }
     @DeleteMapping("/{id}")
     public ApiResponse <User> deleteUser(@PathVariable("id") int id){
-        userServiceImpl.deleteUser(id);
+        userService.deleteUser(id);
         ApiResponse<User> apiResponse = new ApiResponse<>();
         apiResponse.setMessage("Xóa người dùng thành công");
         return apiResponse;
@@ -57,8 +68,15 @@ public class UserController {
     @PutMapping("/{id}/change-password")
     public ApiResponse<User> changePassword(@PathVariable ("id") int id, @RequestBody @Valid UserChangePassword request) {
         ApiResponse<User> apiResponse = new ApiResponse<>();
-        userServiceImpl.changePassword(id, request);
+        userService.changePassword(id, request);
         apiResponse.setMessage("Cap nhat thanh cong");
+        return apiResponse;
+    }
+    @PatchMapping("/{id}/block")
+    public ApiResponse<User> blockUser(@PathVariable ("id") int id) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+        userService.blockUser(id);
+        apiResponse.setMessage("Block user thanh cong");
         return apiResponse;
     }
 }

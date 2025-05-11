@@ -1,6 +1,5 @@
 package com.example.onlineshopping.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,19 +16,17 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
-    @Column(name = "order_id", nullable = false)
-    @JsonProperty("order_id")
-    int orderId;
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 
-    @Column(name = "product_id", nullable = false)
-    @JsonProperty("product_id")
-    int productId;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 
-    @Column(name = "original_price", nullable = false)
-    @JsonProperty("original_price")
+    @Column(name = "original_price")
     long originalPrice;
 
-    @Column(name = "price", nullable = false)
-    @JsonProperty("price")
+    @Column(name = "price")
     long price;
 }

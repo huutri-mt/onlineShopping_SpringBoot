@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,7 +28,10 @@ public class Order {
     @JsonProperty("total_amount")
     long totalAmount;
 
-    @Column(name = "user_id")
-    @JsonProperty("user_id")
-    int userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany (mappedBy = "order" , cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItem;
 }

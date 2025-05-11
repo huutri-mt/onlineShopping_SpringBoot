@@ -23,12 +23,29 @@ public class OrderController {
         return apiResponse;
     }
 
-    @GetMapping("/view/{userId}")
-    public ApiResponse<List<OrderResponse>> viewOrder(@PathVariable int userId){
+    @GetMapping("/viewByUser/{userId}")
+    public ApiResponse<List<OrderResponse>> viewOrdersByUser(@PathVariable int userId){
         ApiResponse<List<OrderResponse>> apiResponse = new ApiResponse<>();
-        List<OrderResponse> orderResponses = orderService.viewOrder(userId);
+        List<OrderResponse> orderResponses = orderService.getOrdersByUserId(userId);
         apiResponse.setData(orderResponses);
         apiResponse.setMessage("Xem don hang thanh cong");
+        return apiResponse;
+    }
+
+    @GetMapping("/viewByOrder/{orderId}")
+    public ApiResponse<OrderResponse> viewOrderByOrderId (@PathVariable int orderId){
+        ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
+        OrderResponse orderResponses = orderService.getOrderByOrderId(orderId);
+        apiResponse.setData(orderResponses);
+        apiResponse.setMessage("Xem don hang thanh cong");
+        return apiResponse;
+    }
+
+    @DeleteMapping("/cancel/{orderId}")
+    public ApiResponse<String> cancelOrder(@PathVariable int orderId){
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        orderService.cancleOrder(orderId);
+        apiResponse.setMessage("Huy don hang thanh cong");
         return apiResponse;
     }
 }
