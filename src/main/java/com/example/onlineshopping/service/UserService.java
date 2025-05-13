@@ -3,6 +3,7 @@ package com.example.onlineshopping.service;
 import com.example.onlineshopping.dto.Request.UserChangePassword;
 import com.example.onlineshopping.dto.Request.UserCreationRequest;
 import com.example.onlineshopping.dto.Request.UserUpdateRequest;
+import com.example.onlineshopping.dto.Response.UserResponse;
 import com.example.onlineshopping.entity.User;
 
 import java.util.List;
@@ -16,4 +17,5 @@ public interface UserService {
     Boolean changePassword (int id, UserChangePassword userChangePassword );
     void blockUser(int userId);
     User getByEmail(String email);
+    UserResponse getMyInfo ();
 }

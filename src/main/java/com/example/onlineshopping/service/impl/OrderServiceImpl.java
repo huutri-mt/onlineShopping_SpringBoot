@@ -3,9 +3,12 @@ package com.example.onlineshopping.service.impl;
 import com.example.onlineshopping.dto.Request.OrderRequest;
 import com.example.onlineshopping.dto.Response.OrderResponse;
 import com.example.onlineshopping.entity.*;
+import com.example.onlineshopping.exception.AppException;
+import com.example.onlineshopping.exception.ErrorCode;
 import com.example.onlineshopping.repository.*;
 import com.example.onlineshopping.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,11 +30,11 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserRepository userRepository;
 
-    @Override
+
     public void createOrder(OrderRequest request) {
         List<CartItem> cartItems = cartItemRepository.findByCartId(request.getCartId());
         if (cartItems == null || cartItems.isEmpty()) {
-            throw new RuntimeException("Giỏ hàng không tồn tại hoặc trống");
+            throw new AppException(ErrorCode.CART_NOT_FOUND_OR_EMPTY);
         }
 
         Order order = new Order();
@@ -40,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
 
         int userId = cartRepository.findUserIdById(request.getCartId());
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_EXISTED));
         order.setUser(user);
 
         order = orderRepository.save(order); // Lưu order và lấy ID
@@ -52,7 +55,7 @@ public class OrderServiceImpl implements OrderService {
         for (CartItem cartItem : cartItems) {
             if (request.getSelectedItems().contains(cartItem.getProduct().getId())) {
                 Product product = productRepository.findById(cartItem.getProduct().getId())
-                        .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
+                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NO_EXISTED));
 
                 long itemPrice = product.getPrice();
                 long originalPrice = product.getOriginalPrice();
@@ -74,7 +77,7 @@ public class OrderServiceImpl implements OrderService {
         orderItemRepository.saveAll(orderItems);
         cartItemRepository.deleteAll(selectedCartItems);
     }
-
+    @PreAuthorize("hasRole('admin') or #id == authentication.token.claims['userId']")
     public List<OrderResponse> getOrdersByUserId(int userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
 
@@ -106,6 +109,7 @@ public class OrderServiceImpl implements OrderService {
         return orderResponses;
     }
 
+
     public OrderResponse getOrderByOrderId(int orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
@@ -132,6 +136,7 @@ public class OrderServiceImpl implements OrderService {
         orderResponse.setProductName(productNames.toString());
         return orderResponse;
     }
+
 
     public void cancleOrder(int orderId) {
         Order order = orderRepository.findById(orderId)

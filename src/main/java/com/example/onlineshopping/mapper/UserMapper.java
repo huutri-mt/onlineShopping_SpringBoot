@@ -43,7 +43,6 @@ public class UserMapper {
 
         user.setEmail(request.getEmail());
         user.setFullname(request.getFullname());
-        user.setStatus(request.getStatus());
         return user;
     }
 

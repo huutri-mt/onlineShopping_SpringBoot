@@ -7,13 +7,18 @@ import com.example.onlineshopping.entity.Cart;
 import com.example.onlineshopping.entity.CartItem;
 import com.example.onlineshopping.entity.Product;
 import com.example.onlineshopping.entity.User;
+import com.example.onlineshopping.exception.AppException;
+import com.example.onlineshopping.exception.ErrorCode;
 import com.example.onlineshopping.repository.CartItemRepository;
 import com.example.onlineshopping.repository.CartRepository;
 import com.example.onlineshopping.repository.ProductRepository;
 import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.service.CartService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,25 +39,37 @@ public class CartServiceImpl implements CartService {
     private UserRepository userRepository;
 
     public CartItem addToCart(AddCartItemRequest request) {
-        Cart cart = cartRepository.findByUserId(request.getUserId());
+        // Kiểm tra số lượng
+        if (request.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Số lượng phải lớn hơn 0");
+        }
 
+        // Lấy userId từ JWT
+        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getClaim("userId");
+
+        int userId = userIdLong.intValue();
+
+
+        Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_EXISTED));
             cart = new Cart();
-            User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-
             cart.setUser(user);
             cart = cartRepository.save(cart);
         }
 
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NO_EXISTED));
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.getProductId());
+        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
 
         if (cartItem == null) {
             cartItem = new CartItem();
-            cartItem.setCartId(cart.getId());
+            cartItem.setCart(cart);
             cartItem.setProduct(product);
             cartItem.setQuantity(request.getQuantity());
         } else {
@@ -62,28 +79,68 @@ public class CartServiceImpl implements CartService {
         return cartItemRepository.save(cartItem);
     }
 
-    public void removeFromCart(RemoveCartItemRequest request){
+
+    public void removeFromCart(RemoveCartItemRequest request) {
+        // Lấy userId từ JWT
+        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getClaim("userId");
+
+        int userId = userIdLong.intValue();
+
         CartItem cartItem = cartItemRepository.findById(request.getCartItemId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại trong giỏ hàng"));
 
+        // Kiểm tra cartItem có thuộc về user đang đăng nhập không
+        if (cartItem.getCart() == null || cartItem.getCart().getUser() == null ||
+                cartItem.getCart().getUser().getId() != userId) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa giỏ hàng này");
+        }
+
         int quantity = cartItem.getQuantity() - request.getQuantity();
-        if (quantity > 0){
+        if (quantity > 0) {
             cartItem.setQuantity(quantity);
             cartItemRepository.save(cartItem);
-        }
-        else {
+        } else {
             cartItemRepository.delete(cartItem);
         }
     }
-    public void removeAllFromCart(int cartId){
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Giỏ hàng không tồn tại"));
 
-        cartItemRepository.deleteByCartItem(cart.getId());
+    @Transactional
+    public void removeAllFromCart(int cartId){
+        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getClaim("userId");
+
+        int userId = userIdLong.intValue();
+
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Gio hang khong ton tai"));
+
+        if (cart.getUser() == null || cart.getUser().getId() != userId) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa giỏ hàng này");
+        }
+
+        cartItemRepository.deleteByCart(cart);
     }
 
-
     public List<CartResponse> getCart(int cartId) {
+        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getClaim("userId");
+
+        int userId = userIdLong.intValue();
+
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Gio hang khong ton tai"));
+
+        if (cart.getUser() == null || cart.getUser().getId() != userId) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa giỏ hàng này");
+        }
+
         List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
         if (cartItems == null || cartItems.isEmpty()) {
             throw new RuntimeException("Giỏ hàng không tồn tại");
@@ -100,8 +157,6 @@ public class CartServiceImpl implements CartService {
         }
         return cartResponses;
     }
-
-
 
 }
 

@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,4 +22,7 @@ public class Cart {
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany (mappedBy = "cart" , cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CartItem> cartItem;
 }

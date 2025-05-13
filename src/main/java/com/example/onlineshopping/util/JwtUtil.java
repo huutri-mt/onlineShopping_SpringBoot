@@ -1,11 +1,15 @@
 package com.example.onlineshopping.util;
 
 import com.example.onlineshopping.entity.User;
+import com.example.onlineshopping.exception.AppException;
+import com.example.onlineshopping.exception.ErrorCode;
+import com.example.onlineshopping.repository.InvalidatedTokenRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.util.List;
@@ -13,12 +17,15 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String secretKey;
+    @Autowired
+    private InvalidatedTokenRepository invalidatedTokenRepository;
 
     public String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
@@ -27,6 +34,7 @@ public class JwtUtil {
                 .issuer("HT")
                 .issueTime(Date.from(Instant.now()))
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId())
                 .claim("authorities", List.of("ROLE_" + user.getRole()))
                 .build();
@@ -49,7 +57,31 @@ public class JwtUtil {
         SignedJWT signedJWT = SignedJWT.parse(token);
 
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-        return signedJWT.verify(jwsVerifier) && expirationTime.after(new Date());
+        return signedJWT.verify(jwsVerifier) && expirationTime.after(new Date()) && !invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID());
     }
+
+    public SignedJWT verifyToken(String token) throws JOSEException {
+        try {
+            JWSVerifier jwsVerifier = new MACVerifier(secretKey.getBytes());
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            String jti = signedJWT.getJWTClaimsSet().getJWTID();
+
+            boolean isSignatureValid = signedJWT.verify(jwsVerifier);
+            boolean isNotExpired = expirationTime.after(new Date());
+            boolean isNotRevoked = !invalidatedTokenRepository.existsById(jti);
+
+            if (!(isSignatureValid && isNotExpired && isNotRevoked)) {
+                throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
+            }
+
+            return signedJWT;
+        } catch (ParseException e) {
+            throw new AppException(ErrorCode.TOKEN_PARSING_ERROR);
+        }
+    }
+
+
 
 }
