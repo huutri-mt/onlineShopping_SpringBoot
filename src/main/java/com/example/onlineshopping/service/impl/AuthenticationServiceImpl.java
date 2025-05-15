@@ -2,9 +2,12 @@ package com.example.onlineshopping.service.impl;
 
 import com.example.onlineshopping.dto.Request.IntrospectRequest;
 import com.example.onlineshopping.dto.Request.LoginRequest;
+import com.example.onlineshopping.dto.Request.RefreshRequest;
 import com.example.onlineshopping.dto.Response.IntrospectResponse;
 import com.example.onlineshopping.dto.Response.LoginResponse;
+import com.example.onlineshopping.dto.Request.RefreshRequest;
 import com.example.onlineshopping.dto.Request.LogoutRequest;
+import com.example.onlineshopping.dto.Response.UserResponse;
 import com.example.onlineshopping.entity.InvalidatedToken;
 import com.example.onlineshopping.entity.User;
 import com.example.onlineshopping.exception.AppException;
@@ -13,7 +16,6 @@ import com.example.onlineshopping.repository.InvalidatedTokenRepository;
 import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.service.AuthenticationService;
 import com.example.onlineshopping.util.JwtUtil;
-import com.nimbusds.jwt.SignedJWT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -65,19 +67,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             introspectResponse.setValid(jwtUtil.validateToken(token));
         } catch (ParseException e) {
-            throw new AppException(ErrorCode.TOKEN_PARSING_ERROR);
+            throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
         }
         catch (JOSEException e) {
             throw new AppException(ErrorCode.AUTH_TOKEN_INVALID);
         }
-
         return introspectResponse;
     }
 
-    @Override
     public void logout(LogoutRequest request) {
         try {
-            var signToken = jwtUtil.verifyToken(request.getToken());
+            var signToken = jwtUtil.verifyToken(request.getToken(), true);
 
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
@@ -92,6 +92,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+    @Override
+    public LoginResponse refreshToken(RefreshRequest request) {
+        try {
+            var signToken = jwtUtil.verifyToken(request.getToken(), true);
 
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidatedToken invalidatedToken = new InvalidatedToken();
+            invalidatedToken.setId(jit);
+            invalidatedToken.setExpiryTime(expiryTime);
+
+            invalidatedTokenRepository.save(invalidatedToken);
+
+            String email = signToken.getJWTClaimsSet().getSubject();
+            User user = userRepository.findByEmail(email);
+            if (user == null) {
+                throw new AppException(ErrorCode.USER_NO_EXISTED);
+            }
+            String token = jwtUtil.generateToken(user);
+
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.setToken(token);
+            return loginResponse;
+
+        } catch (JOSEException | ParseException e) {
+            throw new AppException(ErrorCode.TOKEN_PARSING_ERROR);
+        }
+    }
 
 }

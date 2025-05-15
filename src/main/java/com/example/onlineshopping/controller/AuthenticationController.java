@@ -3,6 +3,7 @@ package com.example.onlineshopping.controller;
 import com.example.onlineshopping.constan.UrlConstant;
 import com.example.onlineshopping.dto.Request.IntrospectRequest;
 import com.example.onlineshopping.dto.Request.LoginRequest;
+import com.example.onlineshopping.dto.Request.RefreshRequest;
 import com.example.onlineshopping.dto.Response.ApiResponse;
 import com.example.onlineshopping.dto.Request.LogoutRequest;
 import com.example.onlineshopping.dto.Response.IntrospectResponse;
@@ -41,12 +42,23 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws JOSEException, ParseException {
         authenticationService.logout(request);
         ApiResponse<Void> apiResponse = new ApiResponse<>();
         apiResponse.setMessage("Đăng xuất thành công");
         return apiResponse;
     }
+
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refreshToken(@RequestBody RefreshRequest request) {
+        LoginResponse loginResponse = authenticationService.refreshToken(request);
+        ApiResponse<LoginResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setMessage("Refresh thành công");
+        apiResponse.setData(loginResponse);
+        return apiResponse;
+    }
+
+
 
 
 

@@ -21,7 +21,8 @@ public enum ErrorCode {
     ACC_BLOCK(1010, "Tài khoản bị khóa", HttpStatus.FORBIDDEN),
     INVALID_TOKEN(1011, "Token không hợp lệ", HttpStatus.UNAUTHORIZED),
     TOKEN_PARSING_ERROR(1012, "Lỗi khi phân tích token", HttpStatus.BAD_REQUEST),
-    AUTH_TOKEN_INVALID(1013, "Lỗi xác thực token", HttpStatus.UNAUTHORIZED);
+    AUTH_TOKEN_INVALID(1013, "Lỗi xác thực token", HttpStatus.UNAUTHORIZED),
+    UNCATEGORIZED_EXCEPTION(9999, "Lỗi không xác định", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;

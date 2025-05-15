@@ -23,30 +23,46 @@ import org.springframework.context.annotation.Lazy;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String[] PUBLIC_URLS_POST = { "/api/v1/register", "/api/v1/auth/log-in", "/api/v1/auth/introspect", "/api/v1/auth/logout" };
+    private static final String[] PUBLIC_URLS_POST = { "/api/v1/register", "/api/v1/auth/log-in", "/api/v1/auth/introspect", "/api/v1/auth/logout", "/api/v1/auth/refresh" };
     private static final String[] PUBLIC_URLS_GET = { "/api/v1/products", "/api/v1/products/id/{id}", "/api/v1/products/category/{category}", "/api/v1/products/name/{name}" };
     @Value("${jwt.secret}")
     private String secretKey;
 
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     @Autowired
     @Lazy
     private CustomJwtDecoder customJwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(requests ->
-                requests.requestMatchers(HttpMethod.POST, PUBLIC_URLS_POST ).permitAll()
-                        .requestMatchers(HttpMethod.GET, PUBLIC_URLS_GET).permitAll()
-                        .anyRequest().authenticated());
+        // Cấu hình exception handling trực tiếp qua exceptionHandlingConfigurer
+        httpSecurity
+                .authorizeHttpRequests(authz ->
+                        authz
+                                .requestMatchers(HttpMethod.POST, PUBLIC_URLS_POST).permitAll()
+                                .requestMatchers(HttpMethod.GET, PUBLIC_URLS_GET).permitAll()
+                                .anyRequest().authenticated()
+                );
 
-        httpSecurity.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJwtDecoder)
-                        . jwtAuthenticationConverter(jwtAuthenticationConverter()))
-        );
+        // Cấu hình OAuth2 Resource Server và JWT Decoder
+        httpSecurity
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJwtDecoder)  // Cấu hình JWT Decoder tùy chỉnh
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
+        // Cấu hình exception handling qua customAuthenticationEntryPoint
+        httpSecurity
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint));  // Đưa vào handler lỗi JWT tùy chỉnh
+
+        // Tắt CSRF nếu không cần thiết
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
+
         return httpSecurity.build();
     }
+
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();

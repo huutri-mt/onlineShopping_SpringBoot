@@ -4,30 +4,33 @@ package com.example.onlineshopping.exception;
 import com.example.onlineshopping.dto.Response.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException ex) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handleException(Exception ex) {
         ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        apiResponse.setMessage("Internal error: " + ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+        apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
     }
+
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse> handleAppException(AppException ex) {
+        log.error("AppException xảy ra: {}", ex.getMessage(), ex); // Thêm log
+
         ErrorCode errorCode = ex.getErrorCode();
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode(errorCode.getCode());
@@ -46,14 +49,6 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(HttpStatus.BAD_REQUEST.value());
         apiResponse.setMessage(message);
         return ResponseEntity.badRequest().body(apiResponse);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse> handleGenericException(Exception ex) {
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        apiResponse.setMessage("Unexpected error: " + ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

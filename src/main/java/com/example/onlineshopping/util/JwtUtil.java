@@ -24,6 +24,13 @@ public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String secretKey;
+
+    @Value("${valid-duration}")
+    private long VALID_DURATION;
+
+    @Value("${referesh-valid-duration}")
+    private long REFRESH_VALID_DURATION;
+
     @Autowired
     private InvalidatedTokenRepository invalidatedTokenRepository;
 
@@ -33,7 +40,7 @@ public class JwtUtil {
                 .subject(user.getEmail())
                 .issuer("HT")
                 .issueTime(Date.from(Instant.now()))
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId())
                 .claim("authorities", List.of("ROLE_" + user.getRole()))
@@ -60,12 +67,14 @@ public class JwtUtil {
         return signedJWT.verify(jwsVerifier) && expirationTime.after(new Date()) && !invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID());
     }
 
-    public SignedJWT verifyToken(String token) throws JOSEException {
+    public SignedJWT verifyToken(String token, Boolean isRefresh) throws JOSEException {
         try {
             JWSVerifier jwsVerifier = new MACVerifier(secretKey.getBytes());
             SignedJWT signedJWT = SignedJWT.parse(token);
 
-            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            Date expirationTime = (isRefresh)
+                    ? new Date(signedJWT.getJWTClaimsSet().getExpirationTime().toInstant().plus(REFRESH_VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                    : signedJWT.getJWTClaimsSet().getExpirationTime();
             String jti = signedJWT.getJWTClaimsSet().getJWTID();
 
             boolean isSignatureValid = signedJWT.verify(jwsVerifier);
