@@ -2,10 +2,9 @@ package com.example.onlineshopping.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -32,6 +31,6 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany (mappedBy = "order" , cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItem;
 }

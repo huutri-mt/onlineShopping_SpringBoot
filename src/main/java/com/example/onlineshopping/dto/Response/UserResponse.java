@@ -1,6 +1,5 @@
 package com.example.onlineshopping.dto.Response;
 
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,4 +13,5 @@ public class UserResponse {
     String fullname;
     String status;
     String role;
+    Boolean noPassword;
 }

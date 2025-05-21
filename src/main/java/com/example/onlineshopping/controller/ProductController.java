@@ -7,18 +7,19 @@ import com.example.onlineshopping.dto.Response.ProductResponse;
 import com.example.onlineshopping.entity.Product;
 import com.example.onlineshopping.mapper.ProductMapper;
 import com.example.onlineshopping.service.ProductService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(UrlConstant.API_V1_Products)
 public class ProductController {
     @Autowired
     private ProductMapper productMapper;
+
     @Autowired
     private ProductService productService;
+
     @PostMapping("/create")
     public ApiResponse<String> createProduct(@RequestBody ProductRequest request) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
@@ -78,7 +79,8 @@ public class ProductController {
     }
 
     @GetMapping("/price-range/{minPrice}/{maxPrice}")
-    public ApiResponse<List<ProductResponse>> getProductsByPriceRange(@PathVariable("minPrice") Double minPrice, @PathVariable("maxPrice") Double maxPrice) {
+    public ApiResponse<List<ProductResponse>> getProductsByPriceRange(
+            @PathVariable("minPrice") Double minPrice, @PathVariable("maxPrice") Double maxPrice) {
         ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
         List<Product> products = productService.getProductsByPriceRange(minPrice, maxPrice);
         List<ProductResponse> productResponses = products.stream()
@@ -87,12 +89,12 @@ public class ProductController {
         apiResponse.setData(productResponses);
         return apiResponse;
     }
+
     @DeleteMapping("/delete/{id}")
-    public ApiResponse<Product> deleteProduct (@PathVariable("id") int id){
+    public ApiResponse<Product> deleteProduct(@PathVariable("id") int id) {
         productService.deleteProduct(id);
         ApiResponse<Product> apiResponse = new ApiResponse<>();
         apiResponse.setMessage("Xóa sản phẩm thành công");
         return apiResponse;
     }
-
 }

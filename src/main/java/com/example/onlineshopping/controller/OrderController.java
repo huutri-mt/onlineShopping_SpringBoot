@@ -5,18 +5,18 @@ import com.example.onlineshopping.dto.Request.OrderRequest;
 import com.example.onlineshopping.dto.Response.ApiResponse;
 import com.example.onlineshopping.dto.Response.OrderResponse;
 import com.example.onlineshopping.service.OrderService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(UrlConstant.API_V1_Order)
 public class OrderController {
     @Autowired
     private OrderService orderService;
+
     @PostMapping("/create")
-    public ApiResponse<String> createOrder(@RequestBody OrderRequest request){
+    public ApiResponse<String> createOrder(@RequestBody OrderRequest request) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         orderService.createOrder(request);
         apiResponse.setMessage("Tao don hang thanh cong");
@@ -24,7 +24,7 @@ public class OrderController {
     }
 
     @GetMapping("/viewByUser/{userId}")
-    public ApiResponse<List<OrderResponse>> viewOrdersByUser(@PathVariable int userId){
+    public ApiResponse<List<OrderResponse>> viewOrdersByUser(@PathVariable int userId) {
         ApiResponse<List<OrderResponse>> apiResponse = new ApiResponse<>();
         List<OrderResponse> orderResponses = orderService.getOrdersByUserId(userId);
         apiResponse.setData(orderResponses);
@@ -33,7 +33,7 @@ public class OrderController {
     }
 
     @GetMapping("/viewByOrder/{orderId}")
-    public ApiResponse<OrderResponse> viewOrderByOrderId (@PathVariable int orderId){
+    public ApiResponse<OrderResponse> viewOrderByOrderId(@PathVariable int orderId) {
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
         OrderResponse orderResponses = orderService.getOrderByOrderId(orderId);
         apiResponse.setData(orderResponses);
@@ -42,7 +42,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/cancel/{orderId}")
-    public ApiResponse<String> cancelOrder(@PathVariable int orderId){
+    public ApiResponse<String> cancelOrder(@PathVariable int orderId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         orderService.cancleOrder(orderId);
         apiResponse.setMessage("Huy don hang thanh cong");

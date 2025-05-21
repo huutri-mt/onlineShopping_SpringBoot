@@ -2,10 +2,9 @@ package com.example.onlineshopping.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import java.util.Date;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Date;
 
 @Getter
 @Setter
@@ -17,5 +16,6 @@ import java.util.Date;
 public class InvalidatedToken {
     @Id
     String id;
+
     Date expiryTime;
 }

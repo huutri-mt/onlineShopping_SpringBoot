@@ -15,13 +15,12 @@ import com.example.onlineshopping.repository.ProductRepository;
 import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.service.CartService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -45,24 +44,21 @@ public class CartServiceImpl implements CartService {
         }
 
         // Lấy userId từ JWT
-        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getClaim("userId");
+        Long userIdLong =
+                ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaim("userId");
 
         int userId = userIdLong.intValue();
 
-
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_EXISTED));
+            User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_EXISTED));
             cart = new Cart();
             cart.setUser(user);
             cart = cartRepository.save(cart);
         }
 
-        Product product = productRepository.findById(request.getProductId())
+        Product product = productRepository
+                .findById(request.getProductId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NO_EXISTED));
 
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
@@ -79,22 +75,21 @@ public class CartServiceImpl implements CartService {
         return cartItemRepository.save(cartItem);
     }
 
-
     public void removeFromCart(RemoveCartItemRequest request) {
         // Lấy userId từ JWT
-        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getClaim("userId");
+        Long userIdLong =
+                ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaim("userId");
 
         int userId = userIdLong.intValue();
 
-        CartItem cartItem = cartItemRepository.findById(request.getCartItemId())
+        CartItem cartItem = cartItemRepository
+                .findById(request.getCartItemId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại trong giỏ hàng"));
 
         // Kiểm tra cartItem có thuộc về user đang đăng nhập không
-        if (cartItem.getCart() == null || cartItem.getCart().getUser() == null ||
-                cartItem.getCart().getUser().getId() != userId) {
+        if (cartItem.getCart() == null
+                || cartItem.getCart().getUser() == null
+                || cartItem.getCart().getUser().getId() != userId) {
             throw new RuntimeException("Bạn không có quyền chỉnh sửa giỏ hàng này");
         }
 
@@ -108,16 +103,13 @@ public class CartServiceImpl implements CartService {
     }
 
     @Transactional
-    public void removeAllFromCart(int cartId){
-        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getClaim("userId");
+    public void removeAllFromCart(int cartId) {
+        Long userIdLong =
+                ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaim("userId");
 
         int userId = userIdLong.intValue();
 
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Gio hang khong ton tai"));
+        Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Gio hang khong ton tai"));
 
         if (cart.getUser() == null || cart.getUser().getId() != userId) {
             throw new RuntimeException("Bạn không có quyền chỉnh sửa giỏ hàng này");
@@ -127,15 +119,12 @@ public class CartServiceImpl implements CartService {
     }
 
     public List<CartResponse> getCart(int cartId) {
-        Long userIdLong = ((Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getClaim("userId");
+        Long userIdLong =
+                ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaim("userId");
 
         int userId = userIdLong.intValue();
 
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Gio hang khong ton tai"));
+        Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Gio hang khong ton tai"));
 
         if (cart.getUser() == null || cart.getUser().getId() != userId) {
             throw new RuntimeException("Bạn không có quyền chỉnh sửa giỏ hàng này");
@@ -157,6 +146,4 @@ public class CartServiceImpl implements CartService {
         }
         return cartResponses;
     }
-
 }
-

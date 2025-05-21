@@ -11,8 +11,8 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApiResponse <T> {
-    int code = 200 ;
+public class ApiResponse<T> {
+    int code = 200;
     String message;
     T data;
 }

@@ -7,29 +7,32 @@ import com.example.onlineshopping.exception.AppException;
 import com.example.onlineshopping.exception.ErrorCode;
 import com.example.onlineshopping.repository.*;
 import com.example.onlineshopping.service.OrderService;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private CartItemRepository cartItemRepository;
+
     @Autowired
     private CartRepository cartRepository;
+
     @Autowired
     private ProductRepository productRepository;
+
     @Autowired
     private OrderRepository orderRepository;
+
     @Autowired
     private OrderItemRepository orderItemRepository;
+
     @Autowired
     private UserRepository userRepository;
-
 
     public void createOrder(OrderRequest request) {
         List<CartItem> cartItems = cartItemRepository.findByCartId(request.getCartId());
@@ -42,8 +45,7 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus("ORDER_INIT");
 
         int userId = cartRepository.findUserIdById(request.getCartId());
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_EXISTED));
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_EXISTED));
         order.setUser(user);
 
         order = orderRepository.save(order); // Lưu order và lấy ID
@@ -54,7 +56,8 @@ public class OrderServiceImpl implements OrderService {
 
         for (CartItem cartItem : cartItems) {
             if (request.getSelectedItems().contains(cartItem.getProduct().getId())) {
-                Product product = productRepository.findById(cartItem.getProduct().getId())
+                Product product = productRepository
+                        .findById(cartItem.getProduct().getId())
                         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NO_EXISTED));
 
                 long itemPrice = product.getPrice();
@@ -77,6 +80,7 @@ public class OrderServiceImpl implements OrderService {
         orderItemRepository.saveAll(orderItems);
         cartItemRepository.deleteAll(selectedCartItems);
     }
+
     @PreAuthorize("hasRole('admin') or #id == authentication.token.claims['userId']")
     public List<OrderResponse> getOrdersByUserId(int userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
@@ -92,7 +96,9 @@ public class OrderServiceImpl implements OrderService {
             StringBuilder productNames = new StringBuilder();
 
             for (OrderItem orderItem : orderItems) {
-                Product product = productRepository.findById(orderItem.getProduct().getId()).orElse(null);
+                Product product = productRepository
+                        .findById(orderItem.getProduct().getId())
+                        .orElse(null);
                 if (product != null) {
                     productNames.append(product.getName()).append(", ");
                 }
@@ -109,10 +115,9 @@ public class OrderServiceImpl implements OrderService {
         return orderResponses;
     }
 
-
     public OrderResponse getOrderByOrderId(int orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+        Order order =
+                orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
 
         OrderResponse orderResponse = new OrderResponse();
         orderResponse.setDescription(order.getDescription());
@@ -123,7 +128,8 @@ public class OrderServiceImpl implements OrderService {
         StringBuilder productNames = new StringBuilder();
 
         for (OrderItem orderItem : orderItems) {
-            Product product = productRepository.findById(orderItem.getProduct().getId()).orElse(null);
+            Product product =
+                    productRepository.findById(orderItem.getProduct().getId()).orElse(null);
             if (product != null) {
                 productNames.append(product.getName()).append(", ");
             }
@@ -137,16 +143,14 @@ public class OrderServiceImpl implements OrderService {
         return orderResponse;
     }
 
-
     public void cancleOrder(int orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
-        
-        if ("ORDER_COMPLETED".equals(order.getStatus()) ||"DELIVERY_SUCCESS".equals(order.getStatus())  ) {
+        Order order =
+                orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+
+        if ("ORDER_COMPLETED".equals(order.getStatus()) || "DELIVERY_SUCCESS".equals(order.getStatus())) {
             throw new RuntimeException("Không thể hủy đơn hàng");
         }
         order.setStatus("ORDER_CANCLE");
         orderRepository.save(order);
     }
-
 }

@@ -1,11 +1,6 @@
 package com.example.onlineshopping.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.web.bind.annotation.GetMapping;
-
-public class AppException extends RuntimeException{
+public class AppException extends RuntimeException {
 
     private final ErrorCode errorCode;
 

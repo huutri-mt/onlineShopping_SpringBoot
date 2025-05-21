@@ -1,12 +1,11 @@
 package com.example.onlineshopping.dto.Request;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @AllArgsConstructor
 @Getter

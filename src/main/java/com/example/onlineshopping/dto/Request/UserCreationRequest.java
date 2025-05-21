@@ -13,13 +13,13 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserCreationRequest {
-    @Email (message = "Email khong hop le")
+    @Email(message = "Email khong hop le")
     String email;
 
     @Size(min = 8)
     String password;
+
     String fullname;
     String status;
     String role;
-
 }

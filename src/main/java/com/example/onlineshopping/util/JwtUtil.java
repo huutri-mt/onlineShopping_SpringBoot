@@ -9,15 +9,15 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import java.util.List;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
@@ -40,7 +40,8 @@ public class JwtUtil {
                 .subject(user.getEmail())
                 .issuer("HT")
                 .issueTime(Date.from(Instant.now()))
-                .expirationTime(new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
+                .expirationTime(new Date(
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId())
                 .claim("authorities", List.of("ROLE_" + user.getRole()))
@@ -57,14 +58,15 @@ public class JwtUtil {
         }
     }
 
-
-    public boolean validateToken(String token)
-            throws ParseException, JOSEException {
+    public boolean validateToken(String token) throws ParseException, JOSEException {
         JWSVerifier jwsVerifier = new MACVerifier(secretKey.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
 
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-        return signedJWT.verify(jwsVerifier) && expirationTime.after(new Date()) && !invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID());
+        return signedJWT.verify(jwsVerifier)
+                && expirationTime.after(new Date())
+                && !invalidatedTokenRepository.existsById(
+                        signedJWT.getJWTClaimsSet().getJWTID());
     }
 
     public SignedJWT verifyToken(String token, Boolean isRefresh) throws JOSEException {
@@ -73,7 +75,12 @@ public class JwtUtil {
             SignedJWT signedJWT = SignedJWT.parse(token);
 
             Date expirationTime = (isRefresh)
-                    ? new Date(signedJWT.getJWTClaimsSet().getExpirationTime().toInstant().plus(REFRESH_VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                    ? new Date(signedJWT
+                            .getJWTClaimsSet()
+                            .getExpirationTime()
+                            .toInstant()
+                            .plus(REFRESH_VALID_DURATION, ChronoUnit.SECONDS)
+                            .toEpochMilli())
                     : signedJWT.getJWTClaimsSet().getExpirationTime();
             String jti = signedJWT.getJWTClaimsSet().getJWTID();
 
@@ -90,7 +97,4 @@ public class JwtUtil {
             throw new AppException(ErrorCode.TOKEN_PARSING_ERROR);
         }
     }
-
-
-
 }

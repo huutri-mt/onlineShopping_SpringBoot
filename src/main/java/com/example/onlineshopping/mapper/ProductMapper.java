@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductMapper {
 
-    public ProductResponse toProductResponse(Product product){
+    public ProductResponse toProductResponse(Product product) {
         if (product == null) {
             return null;
         }
@@ -21,7 +21,7 @@ public class ProductMapper {
         return productResponse;
     }
 
-    public Product toProduct(Product product, ProductRequest request){
+    public Product toProduct(Product product, ProductRequest request) {
         if (request == null) {
             return null;
         }
@@ -35,7 +35,7 @@ public class ProductMapper {
         return product;
     }
 
-    public Product toProduct (ProductRequest request){
+    public Product toProduct(ProductRequest request) {
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());

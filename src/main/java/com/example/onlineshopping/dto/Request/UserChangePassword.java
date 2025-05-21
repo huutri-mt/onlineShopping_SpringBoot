@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class UserChangePassword {
 
     String oldPassword;
+
     @Size(min = 8)
     String newPassword;
 }

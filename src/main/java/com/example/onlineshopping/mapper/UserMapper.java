@@ -45,5 +45,4 @@ public class UserMapper {
         user.setFullname(request.getFullname());
         return user;
     }
-
 }
