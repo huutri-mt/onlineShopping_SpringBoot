@@ -6,6 +6,10 @@ import com.example.onlineshopping.dto.Response.ApiResponse;
 import com.example.onlineshopping.dto.Response.OrderResponse;
 import com.example.onlineshopping.service.OrderService;
 import java.util.List;
+
+import com.example.onlineshopping.util.RequestUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,12 +20,18 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/create")
-    public ApiResponse<String> createOrder(@RequestBody OrderRequest request) {
-        ApiResponse<String> apiResponse = new ApiResponse<>();
-        orderService.createOrder(request);
-        apiResponse.setMessage("Tao don hang thanh cong");
+    public ApiResponse<OrderResponse> createOrder(@Valid @RequestBody OrderRequest request,
+                                                  HttpServletRequest httpServletRequest) {
+        String ipAddress = RequestUtil.getIpAddress(httpServletRequest);
+        request.setIpAddress(ipAddress);
+        OrderResponse orderResponse = orderService.createOrder(request);
+        ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setMessage("Tạo đơn hàng thành công");
+        apiResponse.setData(orderResponse);
+
         return apiResponse;
     }
+
 
     @GetMapping("/viewByUser/{userId}")
     public ApiResponse<List<OrderResponse>> viewOrdersByUser(@PathVariable int userId) {

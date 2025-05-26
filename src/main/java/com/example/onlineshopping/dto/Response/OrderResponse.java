@@ -15,4 +15,11 @@ public class OrderResponse {
     String productName;
     long price;
     String status;
+    String paymentMethod; // "VNPAY", "MOMO", "COD", etc.
+    String payment;        // trạng thái thanh toán: "PAID", "UNPAID", etc.
+
+    // Các link thanh toán theo phương thức
+    String vnpayUrl;
+    String momoUrl;
+    String zaloPayUrl;
 }

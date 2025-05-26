@@ -23,8 +23,9 @@ public enum ErrorCode {
     AUTH_TOKEN_INVALID(1013, "Lỗi xác thực token", HttpStatus.UNAUTHORIZED),
     UNCATEGORIZED_EXCEPTION(9999, "Lỗi không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
     PASSWORD_EXISTED(1014, "Mật khẩu đã tồn tại", HttpStatus.CONFLICT),
-    USER_NOT_FOUND(1015, "Người dùng không tồn tại", HttpStatus.NOT_FOUND),;
-
+    USER_NOT_FOUND(1015, "Người dùng không tồn tại", HttpStatus.NOT_FOUND),
+    ORDER_NOT_FOUND(1016, "Đơn hàng không tồn tại", HttpStatus.NOT_FOUND),
+    VNPAY_SIGNING_FAILED(1017, "Lỗi ký VNPay", HttpStatus.INTERNAL_SERVER_ERROR);
     private final int code;
     private final String message;
     private final HttpStatusCode statusCode;
