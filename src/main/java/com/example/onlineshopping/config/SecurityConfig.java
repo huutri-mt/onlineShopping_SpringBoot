@@ -1,7 +1,6 @@
 package com.example.onlineshopping.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -35,7 +34,8 @@ public class SecurityConfig {
         "/api/v1/products",
         "/api/v1/products/id/{id}",
         "/api/v1/products/category/{category}",
-        "/api/v1/products/name/{name}"
+        "/api/v1/products/name/{name}",
+            "/api/v1/payments/vnpay_ipn"
     };
 
     @Autowired

@@ -1,10 +1,13 @@
 package com.example.onlineshopping.entity;
 
+import com.example.onlineshopping.constan.OrderStatus;
+import com.example.onlineshopping.constan.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -20,8 +23,13 @@ public class Order {
 
     String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    String status;
+    OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    PaymentMethod paymentMethod;
 
     @Column(name = "total_amount")
     @JsonProperty("total_amount")

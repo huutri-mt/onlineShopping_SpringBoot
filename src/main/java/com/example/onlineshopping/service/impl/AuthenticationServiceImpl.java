@@ -1,23 +1,28 @@
 package com.example.onlineshopping.service.impl;
 
 import com.example.onlineshopping.dto.Request.*;
+import com.example.onlineshopping.dto.Response.ExchangeTokenResponse;
 import com.example.onlineshopping.dto.Response.IntrospectResponse;
 import com.example.onlineshopping.dto.Response.LoginResponse;
+import com.example.onlineshopping.dto.Response.OutboundUserResponse;
 import com.example.onlineshopping.entity.InvalidatedToken;
 import com.example.onlineshopping.entity.User;
 import com.example.onlineshopping.exception.AppException;
 import com.example.onlineshopping.exception.ErrorCode;
 import com.example.onlineshopping.repository.InvalidatedTokenRepository;
-import com.example.onlineshopping.repository.httpclient.OutboundIdentityClient;
+import com.example.onlineshopping.repository.httpclient.FacebookIdentityClient;
+import com.example.onlineshopping.repository.httpclient.FacebookUserClient;
+import com.example.onlineshopping.repository.httpclient.GoogleIdentityClient;
 import com.example.onlineshopping.repository.UserRepository;
-import com.example.onlineshopping.repository.httpclient.OutboundUserClient;
+import com.example.onlineshopping.repository.httpclient.GoogleUserClient;
 import com.example.onlineshopping.service.AuthenticationService;
 import com.example.onlineshopping.util.JwtUtil;
 import com.nimbusds.jose.JOSEException;
 import java.text.ParseException;
 import java.util.Date;
+
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Value;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,24 +47,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private InvalidatedTokenRepository invalidatedTokenRepository;
 
     @Autowired
-    private OutboundUserClient outboundUserClient;
+    private FacebookIdentityClient facebookIdentityClient;
 
     @Autowired
-    private  OutboundIdentityClient outboundIdentityClient;
-    @NonFinal
-    @Value("${client-id}")
-    protected String CLIENT_ID;
+    private GoogleUserClient googleUserClient;
 
-    @NonFinal
-    @Value("${client-secret}")
-    protected String CLIENT_SECRET ;
+    @Autowired
+    private FacebookUserClient facebookUserClient;
 
-    @NonFinal
-    @Value("${redirect-uri}")
-    protected String REDIRECT_URI;
+    @Autowired
+    private GoogleIdentityClient googleIdentityClient;
 
-    @NonFinal
-    protected String GRANT_TYPE = "authorization_code";
+    @Value("${google.client-id}")
+    private String googleClientId;
+    @Value("${google.client-secret}")
+    private String googleClientSecret;
+    @Value("${google.redirect-uri}")
+    private String googleRedirectUri;
+
+    @Value("${facebook.client-id}")
+    private String facebookClientId;
+    @Value("${facebook.client-secret}")
+    private String facebookClientSecret;
+    @Value("${facebook.redirect-uri}")
+    private String facebookRedirectUri;
 
     public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
@@ -145,33 +156,70 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    public LoginResponse outboundAuthenticate(String code) {
-            Map<String, String> formData = new HashMap<>();
-            formData.put("code", code);
-            formData.put("client_id", CLIENT_ID);
-            formData.put("client_secret", CLIENT_SECRET);
-            formData.put("redirect_uri", REDIRECT_URI);
-            formData.put("grant_type", GRANT_TYPE);
-
-            var response = outboundIdentityClient.exchangeToken(formData);
-            var userInfor = outboundUserClient.getUserInfo("json", response.getAccessToken());
-
-            User user = userRepository.findByEmail(userInfor.getEmail());
-            if (user == null){
-                user = new User();
-                user.setFullname(userInfor.getName());
-                user.setEmail(userInfor.getEmail());
-                user.setStatus("active");
-                user.setRole("user");
-
-                userRepository.save(user);
-            }
-
-            var token = jwtUtil.generateToken(user);
-            return LoginResponse.builder()
-                    .token(token)
-                    .build();
+    public LoginResponse outboundAuthenticate(String code, String provider) {
+        Map<String, String> formData = new HashMap<>();
+        String clientId;
+        String clientSecret;
+        String redirectUri;
+        if ("google".equalsIgnoreCase(provider)) {
+            clientId = googleClientId;
+            clientSecret = googleClientSecret;
+            redirectUri = googleRedirectUri;
+        } else if ("facebook".equalsIgnoreCase(provider)) {
+            clientId = facebookClientId;
+            clientSecret = facebookClientSecret;
+            redirectUri = facebookRedirectUri;
+        } else {
+            throw new AppException(ErrorCode.UNKNOWN_PROVIDER);
         }
 
+        formData.put("code", code);
+        formData.put("client_id", clientId);
+        formData.put("client_secret", clientSecret);
+        formData.put("redirect_uri", redirectUri);
+        formData.put("grant_type", "authorization_code");
+        log.info("Sending formData: {}", formData);
+
+        ExchangeTokenResponse response;
+        OutboundUserResponse userInfo;
+
+        try {
+            if ("google".equalsIgnoreCase(provider)) {
+                response = googleIdentityClient.exchangeToken(formData);
+                log.info("Token response: {}", response);
+                userInfo = googleUserClient.getUserInfo("json", response.getAccessToken());
+            } else {
+                response = facebookIdentityClient.exchangeToken(formData);
+                log.info("Token response: {}", response);
+                userInfo = facebookUserClient.getUserInfo("id,name,email,picture", response.getAccessToken());
+
+            }
+        }  catch (FeignException e) {
+        String errorMessage = e.contentUTF8();
+        log.error("FeignException status: {}, content: {}", e.status(), errorMessage, e);
+
+        if (errorMessage.contains("redirect_uri_mismatch")) {
+            throw new AppException(ErrorCode.REDIRECT_URI_MISMATCH);
+        }
+
+        throw new AppException(ErrorCode.OAUTH_PROVIDER_ERROR);
+    }
+
+    // Kiểm tra hoặc tạo user
+        User user = userRepository.findByEmail(userInfo.getEmail());
+        if (user == null) {
+            user = new User();
+            user.setFullname(userInfo.getName());
+            user.setEmail(userInfo.getEmail());
+            user.setStatus("active");
+            user.setRole("user");
+            userRepository.save(user);
+        }
+        log.info("user: {}",user);
+
+        String jwt = jwtUtil.generateToken(user);
+        log.info("token: {}",jwt);
+        return LoginResponse.builder().token(jwt).build();
+    }
 
 }

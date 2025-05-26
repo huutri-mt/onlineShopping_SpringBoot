@@ -58,12 +58,13 @@ public class AuthenticationController {
     }
 
     @PostMapping("/outbound/authentication")
-    public ApiResponse<LoginResponse> outboundAuthenticate(@RequestParam("code") String code) {
-        LoginResponse result = authenticationService.outboundAuthenticate(code);
+    public ApiResponse<LoginResponse> outboundAuthenticate(@RequestParam("code") String code,
+                                                           @RequestParam("provider") String provider) {
+        log.info("code: " + code + " provider: " + provider);
+        LoginResponse result = authenticationService.outboundAuthenticate(code, provider);
         ApiResponse<LoginResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(result);
         return apiResponse;
     }
-
 
 }

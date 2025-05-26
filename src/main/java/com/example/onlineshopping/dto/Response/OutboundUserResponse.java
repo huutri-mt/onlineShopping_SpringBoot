@@ -18,5 +18,4 @@ public class OutboundUserResponse {
     String email;
     boolean verifiedEmail;
     String name;
-    String picture;
 }

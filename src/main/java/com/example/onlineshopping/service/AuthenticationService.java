@@ -17,5 +17,5 @@ public interface AuthenticationService {
 
     LoginResponse refreshToken(RefreshRequest request);
 
-    LoginResponse outboundAuthenticate(String code);
+    LoginResponse outboundAuthenticate(String code, String provider);
 }
